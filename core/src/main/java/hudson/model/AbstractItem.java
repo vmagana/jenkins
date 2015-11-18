@@ -30,7 +30,6 @@ import hudson.XmlFile;
 import hudson.Util;
 import hudson.Functions;
 import hudson.BulkChange;
-import hudson.cli.declarative.CLIMethod;
 import hudson.cli.declarative.CLIResolver;
 import hudson.model.listeners.ItemListener;
 import hudson.model.listeners.SaveableListener;
@@ -164,7 +163,7 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
     }
     
     public void setDisplayName(String displayName) throws IOException {
-        this.displayName = Util.fixEmpty(displayName);
+        this.displayName = Util.fixEmptyAndTrim(displayName);
         save();
     }
              
@@ -680,7 +679,6 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
      *
      * @since 1.556
      */
-    @CLIMethod(name="reload-job")
     @RequirePOST
     public void doReload() throws IOException {
         checkPermission(CONFIGURE);
@@ -700,8 +698,8 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
     }
 
 
-    /* (non-Javadoc)
-     * @see hudson.model.AbstractModelObject#getSearchName()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getSearchName() {

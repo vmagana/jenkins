@@ -325,13 +325,11 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
         buildMixIn.onLoad(parent, name);
         builds = buildMixIn.getRunMap();
         triggers().setOwner(this);
-        if (isBuildable()) {
-            for (Trigger t : triggers()) {
-                try {
-                    t.start(this, Items.currentlyUpdatingByXml());
-                } catch (Throwable e) {
-                    LOGGER.log(Level.WARNING, "could not start trigger while loading project '" + getFullName() + "'", e);
-                }
+        for (Trigger t : triggers()) {
+            try {
+                t.start(this, Items.currentlyUpdatingByXml());
+            } catch (Throwable e) {
+                LOGGER.log(Level.WARNING, "could not start trigger while loading project '" + getFullName() + "'", e);
             }
         }
         if(scm==null)
@@ -360,7 +358,7 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
                 jdkTool = jdkTool.forNode(node, listener);
             }
             jdkTool.buildEnvVars(env);
-        } else if (jdk != null && !jdk.equals(JDK.DEFAULT_NAME)) {
+        } else if (!JDK.isDefaultName(jdk)) {
             listener.getLogger().println("No JDK named ‘" + jdk + "’ found");
         }
 
@@ -1092,6 +1090,7 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
      * or if the blockBuildWhenUpstreamBuilding option is true and an upstream
      * project is building, but derived classes can also check other conditions.
      */
+    @Override
     public boolean isBuildBlocked() {
         return getCauseOfBlockage()!=null;
     }
@@ -1874,10 +1873,8 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
         for (Trigger t : triggers())
             t.stop();
         triggers.replaceBy(buildDescribable(req, Trigger.for_(this)));
-        if (isBuildable()) {
-            for (Trigger t : triggers())
-                t.start(this, true);
-        }
+        for (Trigger t : triggers())
+            t.start(this,true);
     }
 
     /**
@@ -2248,8 +2245,11 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
     public static AbstractProject resolveForCLI(
             @Argument(required=true,metaVar="NAME",usage="Job name") String name) throws CmdLineException {
         AbstractProject item = Jenkins.getInstance().getItemByFullName(name, AbstractProject.class);
-        if (item==null)
-            throw new CmdLineException(null,Messages.AbstractItem_NoSuchJobExists(name,AbstractProject.findNearest(name).getFullName()));
+        if (item==null) {
+            AbstractProject project = AbstractProject.findNearest(name);
+            throw new CmdLineException(null, project == null ? Messages.AbstractItem_NoSuchJobExistsWithoutSuggestion(name)
+                    : Messages.AbstractItem_NoSuchJobExists(name, project.getFullName()));
+        }
         return item;
     }
 

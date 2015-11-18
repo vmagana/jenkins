@@ -126,7 +126,6 @@ import java.lang.management.ThreadInfo;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
@@ -1453,7 +1452,7 @@ public class JenkinsRule implements TestRule, MethodRule, RootAction {
             Object lv = ReflectionUtils.getPublicProperty(lhs, names[i]);
             Object rv = ReflectionUtils.getPublicProperty(rhs, names[i]);
 
-            if (Iterable.class.isAssignableFrom(types[i])) {
+            if (lv != null && rv != null && Iterable.class.isAssignableFrom(types[i])) {
                 Iterable lcol = (Iterable) lv;
                 Iterable rcol = (Iterable) rv;
                 Iterator ltr,rtr;
@@ -2357,11 +2356,6 @@ public class JenkinsRule implements TestRule, MethodRule, RootAction {
             @Override
             public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) {
                 throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getDisplayName() {
-                return this.getClass().getName();
             }
         }
     }
